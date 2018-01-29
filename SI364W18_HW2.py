@@ -28,8 +28,10 @@ app.config['SECRET_KEY'] = 'hardtoguessstring'
 ####################
 ###### FORMS #######
 ####################
-
-
+class AlbumEntryForm(FlaskForm):
+	album_name = StringField("Enter the name of an album:", validators=[Required()])
+	radio = RadioField("<br>How much do you like this album? (1 low, 3 high)", choices=[('1', '1'), ('2', '2'), ('3', '3')], validators=[Required()])
+	submit = SubmitField("Submit")
 
 
 ####################
@@ -62,6 +64,7 @@ def a_result():
 		data = json.loads(resp.text)
 		return render_template('artist_info.html', objects = data['results'])
 
+
 @app.route('/artistlinks')
 def a_links():
 	return render_template('artist_links.html')
@@ -74,6 +77,19 @@ def specific_song(artist_name):
 	resp = requests.get('https://itunes.apple.com/search?', params = params)
 	data = json.loads(resp.text)
 	return render_template('specific_artist.html', results = data['results'])
+
+@app.route('/album_entry')
+def album_entry():
+	album_form = AlbumEntryForm()
+	return render_template('album_entry.html', form = album_form)
+
+@app.route('/album_result', methods = ['GET', 'POST'])
+def album_result():
+	form = AlbumEntryForm(request.form)
+	if request.method == 'POST' and form.validate_on_submit():
+		album_name = form.album_name.data
+		radio = form.radio.data
+		return render_template('album_data.html', album_name = album_name, radio = radio)
 
 if __name__ == '__main__':
     app.run(use_reloader=True,debug=True)
